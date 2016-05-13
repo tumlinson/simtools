@@ -185,19 +185,3 @@ def here_is_a_callback():
 inputs = VBoxForm(children=[aperture, exptime, magnitude]) 
 curdoc().add_root(HBox(children=[inputs, snr_plot], width=1800))
 curdoc().add_periodic_callback(here_is_a_callback, 1000) 
-
-script = autoload_server(model=None, app_path="/simple_etc", url="pancho.local:5006")
-print(script) 
-
-yes = True 
-
-#while yes: 
-#   time.sleep(5) 
-#   print 'Asleep' 
-##   update_data() 
-   
-
-
-
-
-

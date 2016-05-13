@@ -15,8 +15,8 @@ from bokeh.models.widgets import Slider, TextInput, Select
 from bokeh.io import hplot, vplot, curdoc
 from bokeh.embed import file_html
 
-q = ascii.read('fos_qso_short.txt') 
-s = Table.read('ckp00_41000.fits') 
+q = ascii.read('data/fos_qso_short.txt') 
+s = Table.read('data/ckp00_41000.fits') 
 s['g50'] = s['g50'] / 1.5e11 
 
 sn = (1e-15*q['FLUX']*1. * (1.e15) * 36. ) ** 0.5 

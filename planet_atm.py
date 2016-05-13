@@ -16,7 +16,7 @@ from bokeh.models.widgets import Slider, TextInput, Select
 from bokeh.io import hplot, vplot, curdoc
 from bokeh.embed import file_html
 
-el = Table.read('master_table.fits') 
+el = Table.read('vpl_models/master_table.fits') 
 
 first_spectrum = 0.1 * el['SNOW'][0] + 0.2 * el['CONIFERS'][0] + 0.1 * el['ALGAE'][0] + 0.6 * el['OCEAN'][0] 
 
