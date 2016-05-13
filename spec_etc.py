@@ -16,8 +16,8 @@ from bokeh.io import hplot, vplot, curdoc
 from bokeh.embed import file_html
 
 q = ascii.read('data/fos_qso_short.txt') 
-s = Table.read('data/ckp00_41000.fits') 
-s['g50'] = s['g50'] / 1.5e11 
+#s = Table.read('data/ckp00_41000.fits') 
+#s['g50'] = s['g50'] / 1.5e11 
 
 sn = (1e-15*q['FLUX']*1. * (1.e15) * 36. ) ** 0.5 
 
@@ -26,7 +26,7 @@ junkf[q['WAVE'] < 1100.] = -999.
 junkf[q['WAVE'] > 1800.] = -999.  
 
 full_qso_spectrum = ColumnDataSource(data=dict(w=q['WAVE']*1., f=1e-15*q['FLUX']*1., w0=q['WAVE']*1., f0=1e-15*q['FLUX'], junkf=junkf, sn=sn)) 
-full_o5_spectrum = ColumnDataSource(data=dict(w=s['WAVELENGTH']*1., f=1e-12*s['g50']*1., w0=s['WAVELENGTH']*1., f0=1e-12*q['g50'], junkf=junkf, sn=sn)) 
+#full_o5_spectrum = ColumnDataSource(data=dict(w=s['WAVELENGTH']*1., f=1e-12*s['g50']*1., w0=s['WAVELENGTH']*1., f0=1e-12*q['g50'], junkf=junkf, sn=sn)) 
 
 flux_plot = Figure(plot_height=400, plot_width=800, 
               tools="crosshair,hover,pan,reset,resize,save,box_zoom,wheel_zoom", outline_line_color='black', 

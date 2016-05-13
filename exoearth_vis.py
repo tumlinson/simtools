@@ -26,7 +26,7 @@ from bokeh.models.widgets import Slider, TextInput
 from bokeh.io import hplot, vplot, curdoc
 from bokeh.embed import file_html
 
-targets = Table.read('stark_yields/run_12.0_1.00E-10_1.5_0.10_3.0.fits') 
+targets = Table.read('data/stark_yields/run_12.0_1.00E-10_1.5_0.10_3.0.fits') 
 targets['TESTCOLOR'] = 'red' 
 col = copy.deepcopy(targets['TYPE'][0]) 
 col[:] = 'black' 
@@ -147,7 +147,7 @@ def update_data(attrname, old, new):
     print 'APERTURE A = ', a, ' CONTRAST C = ', c 
     apertures = {'4.0':'4.0','4':'4.0','8':'8.0','12':'12.0','12.0':'12.0','16':'16.0', '20':'20.0'} 
     contrasts = {'-11':'1.00E-11','-10':'1.00E-10','-9':'1.00E-09'} 
-    targets = Table.read('stark_yields/'+'run_'+apertures[str(a)]+'_'+contrasts[str(c)]+'_1.5_0.10_3.0.fits') 
+    targets = Table.read('data/stark_yields/'+'run_'+apertures[str(a)]+'_'+contrasts[str(c)]+'_1.5_0.10_3.0.fits') 
     star_points.data['complete'] = np.array(targets['COMPLETENESS'][0]) 
 
 # total yields updated here 
