@@ -19,12 +19,14 @@ from bokeh.io import output_file, gridplot
 from bokeh.plotting import Figure
 from bokeh.resources import CDN
 from bokeh.client import push_session
-from bokeh.embed import components 
-from bokeh.models import ColumnDataSource, HBox, VBoxForm, HoverTool, Range1d 
+from bokeh.embed import components, file_html
+from bokeh.models import ColumnDataSource, HoverTool, Range1d 
+from bokeh.layouts import Column, Row, WidgetBox
 from bokeh.models.glyphs import Text 
 from bokeh.models.widgets import Slider, TextInput
 from bokeh.io import hplot, vplot, curdoc
-from bokeh.embed import file_html
+from bokeh.models.callbacks import CustomJS
+
 
 targets = Table.read('data/stark_yields/run_12.0_1.00E-10_1.5_0.10_3.0.fits') 
 targets['TESTCOLOR'] = 'red' 
@@ -69,9 +71,9 @@ hover = HoverTool(names=["star_points_to_hover"], mode='mouse', point_policy="sn
         """
     )
 plot1.add_tools(hover) 
-plot1.x_range = Range1d(-50, 50, bounds=(-50,50)) 
-plot1.y_range = Range1d(-50, 50, bounds=(-50,50)) 
 hover = plot1.select(dict(type=HoverTool))
+plot1.x_range=Range1d(-50,50,bounds=(-50,50)) 
+plot1.y_range=Range1d(-50,50,bounds=(-50,50)) 
 plot1.background_fill_color = "black"
 plot1.background_fill_alpha = 1.0
 plot1.yaxis.axis_label = 'Yield' 
@@ -99,15 +101,16 @@ plot1.text(np.array([48.5]), np.array([41.5-3*2.4]), ["Not Observed"], text_colo
 plot1.circle([0], [0], radius=0.1, fill_alpha=1.0, line_color='white', fill_color='white') 
 plot1.circle([0], [0], radius=0.5, fill_alpha=0.0, line_color='white') 
 
-sym = plot1.circle('x', 'y', source=rad_circles, fill_color='fillcolor', line_color='white', line_width=4, radius=[40,30,20,10], line_alpha=0.8, fill_alpha=0.0) 
+sym = plot1.circle('x', 'y', source=rad_circles, fill_color='fillcolor', line_color='white', 
+           line_width=4, radius=[40,30,20,10], line_alpha=0.8, fill_alpha=0.0) 
 sym.glyph.line_dash = [6, 6]
 
 junk_points = ColumnDataSource(data=dict(x=np.array([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]), y=np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])))
 plot2 = Figure(plot_height=400, plot_width=450, tools="pan,resize, reset,save", outline_line_color='black', 
-              x_range=[0, 20], y_range=[0, 1], toolbar_location='right', title='Detections of 10% Phenomena', title_text_font_size='14pt')
+              x_range=[0, 20], y_range=[0, 1], toolbar_location='right', title='Detections of 10% Phenomena') 
+plot2.title.text_font_size = '14pt' 
 plot2.background_fill_color = "beige"
 plot2.background_fill_alpha = 0.5 
-#plot2.title='Detections of 10% Phenomena' 
 plot2.yaxis.axis_label = 'Probability' 
 plot2.xaxis.axis_label = 'Number of Detections' 
 plot2.xaxis.axis_line_width = 2
@@ -121,7 +124,7 @@ plot2.circle('x', 'y', source=junk_points, \
 plot2.line('x', 'y', source=junk_points, line_color='purple', line_alpha=0.5) 
 
 
-rect_points = ColumnDataSource(data=dict(top=[totyield/2.-50., 9000, 9000], bottom=[-49.8, 8800, 8800], left=[-49.8, 8800, 9000], strbag='     ', right=[-45, 8800, 9200])) 
+rect_points = ColumnDataSource(data=dict(top=[totyield/2.-50., 9000, 9000], bottom=[-49.8, 8800, 8800], left=[-49.8, 8800, 9000], strbag=' ', right=[-45, 8800, 9200])) 
        
 plot1.quad(top="top", bottom="bottom", left="left", right="right", source=rect_points, color="lightgreen", fill_alpha=0.5, line_alpha=0.) 
 plot1.quad(top=49.9, bottom=-49.9, left=-49.8, right=-45, line_color="lightgreen", line_width=3, fill_alpha=0.0) # open box 
@@ -134,17 +137,14 @@ plot1.text([-47.5], [47], ['200'], text_color="white", text_align="center")
 plot1.text([-42.5], [47], ['ExoEarth Yield'], text_color="white", text_align="left") 
 
       
-# Set up widgets
-aperture= Slider(title="Aperture (meters)", value=12., start=4., end=20.0, step=4.0)
-contrast = Slider(title="Log (Contrast)", value=-10, start=-11.0, end=-9, step=1.0)
- 
 def update_data(attrname, old, new):
  
     # Get the current slider values
     a = aperture.value 
     c = contrast.value
+    i = iwa.value
 
-    print 'APERTURE A = ', a, ' CONTRAST C = ', c 
+    print 'APERTURE A = ', a, ' CONTRAST C = ', c, ' IWA I = ', i 
     apertures = {'4.0':'4.0','4':'4.0','8':'8.0','12':'12.0','12.0':'12.0','16':'16.0', '20':'20.0'} 
     contrasts = {'-11':'1.00E-11','-10':'1.00E-10','-9':'1.00E-09'} 
     targets = Table.read('data/stark_yields/'+'run_'+apertures[str(a)]+'_'+contrasts[str(c)]+'_1.5_0.10_3.0.fits') 
@@ -161,11 +161,7 @@ def update_data(attrname, old, new):
 
     yield_now = np.sum(targets['COMPLETENESS'][0]) * 0.1 
     rect_points.data['top'] = np.array([yield_now,a,a])/2. - 50. 
-    #rect_points.data['strbag'] = str(0.1 * np.sum(np.array(targets['COMPLETENESS'][0]))) 
-    
-    rect_points.data['strbag'] = yield_now[0].astype(str)
-    print 'The total yield for printing on the plot is: ', yield_now.astype(str)
-    print 'The total yield for printing on the plot is: ', yield_now.astype(str)
+    rect_points.data['strbag'] = str(np.sum(np.array(targets['COMPLETENESS'][0]))) 
 
     # can simply modify star_points, no need to regenerate it from scratch 
 
@@ -193,15 +189,31 @@ def update_data(attrname, old, new):
     d20= np.size(np.where(d == 20)) / 10000. 
       
     junk_points.data['y'] = np.array([d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20]) 
-    
 
+source = ColumnDataSource(data=dict(value=[]))
+source.on_change('data', update_data)
+    
+# Set up widgets
+aperture= Slider(title="Aperture (meters)", value=12., start=4., end=20.0, step=4.0, callback_policy='mouseup')
+aperture.callback = CustomJS(args=dict(source=source), code="""
+    source.data = { value: [cb_obj.value] }
+""")
+contrast = Slider(title="Log (Contrast)", value=-10, start=-11.0, end=-9, step=1.0, callback_policy='mouseup')
+contrast.callback = CustomJS(args=dict(source=source), code="""
+    source.data = { value: [cb_obj.value] }
+""")
+iwa      = Slider(title="Inner Working Angle (l/D)", value=1.5, start=1.5, end=4.0, step=0.5, callback_policy='mouseup')
+iwa.callback = CustomJS(args=dict(source=source), code="""
+    source.data = { value: [cb_obj.value] }
+""")
+ 
 
 # iterate on changes to parameters 
-for w in [aperture, contrast]: 
-    w.on_change('value', update_data)
-    
+#for w in [aperture, contrast]: 
+#    w.on_change('value', update_data)
  
 # Set up layouts and add to document
-inputs = VBoxForm(children=[aperture, contrast, plot2]) 
-curdoc().add_root(HBox(children=[inputs, plot1], width=1800))
+inputs = Column(children=[aperture, contrast, plot2]) 
+curdoc().add_root(Row(children=[inputs, plot1], width=1800))
+curdoc().add_root(source) 
 

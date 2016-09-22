@@ -11,12 +11,13 @@ from bokeh.io import output_file, gridplot
 from bokeh.plotting import Figure
 from bokeh.resources import CDN
 from bokeh.embed import components 
-from bokeh.models import ColumnDataSource, HBox, VBoxForm, HoverTool, Paragraph 
+from bokeh.models import ColumnDataSource, HBox, VBoxForm, HoverTool, Paragraph, Range1d 
+from bokeh.layouts import Column, Row, WidgetBox
 from bokeh.models.widgets import Slider, TextInput, Select 
 from bokeh.io import hplot, vplot, curdoc
 from bokeh.embed import file_html
 
-el = Table.read('vpl_models/master_table.fits') 
+el = Table.read('data/vpl_models/master_table.fits') 
 
 first_spectrum = 0.1 * el['SNOW'][0] + 0.2 * el['CONIFERS'][0] + 0.1 * el['ALGAE'][0] + 0.6 * el['OCEAN'][0] 
 
@@ -30,6 +31,9 @@ full_spectrum = ColumnDataSource(data=dict(w=el['WAVE'][0], f=first_spectrum, sn
 atm_plot = Figure(plot_height=400, plot_width=800, 
               tools="crosshair,hover,pan,reset,resize,save,box_zoom,wheel_zoom", outline_line_color='black', 
               x_range=[0.2, 1.2], y_range=[0, 0.5], toolbar_location='above') 
+
+atm_plot.x_range=Range1d(0.2, 1.2, bounds=(0.2, 1.2)) 
+atm_plot.y_range=Range1d(0.0, 0.5, bounds=(0.0, 0.5)) 
 
 atm_plot.background_fill_color = "beige"
 atm_plot.background_fill_alpha = 0.5 
@@ -69,40 +73,33 @@ def update_data(attrname, old, new):
     full_spectrum.data['conifers'] = conifers.value * el['CONIFERS'][0] 
     full_spectrum.data['algae'] = algae.value * el['ALGAE'][0] 
     full_spectrum.data['ocean'] = ocean_scale* el['OCEAN'][0] 
-    
 
 def update_on_callback(): 
 
-    print 'SNOW : ', snow.value 
-    print 'CONIFERS : ', conifers.value 
-    print 'OCEAN : ', ocean.value 
+    print 'SNOW : ', snow.value
+    print 'CONIFERS : ', conifers.value
+    print 'OCEAN : ', ocean.value
 
-    ocean_scale = 1.0 - snow.value - conifers.value - algae.value 
-    ocean.value = 1.0 - snow.value - conifers.value - algae.value 
- 
+    ocean_scale = 1.0 - snow.value - conifers.value - algae.value
+    ocean.value = 1.0 - snow.value - conifers.value - algae.value
+
     full_spectrum.data['f'] = snow.value * el['SNOW'][0] + conifers.value * el['CONIFERS'][0] + algae.value * el['ALGAE'][0] +  ocean_scale* el['OCEAN'][0]
-    full_spectrum.data['snow'] = snow.value * el['SNOW'][0] 
-    full_spectrum.data['conifers'] = conifers.value * el['CONIFERS'][0] 
-    full_spectrum.data['algae'] = algae.value * el['ALGAE'][0] 
-    full_spectrum.data['ocean'] = ocean_scale* el['OCEAN'][0] 
-    
+    full_spectrum.data['snow'] = snow.value * el['SNOW'][0]
+    full_spectrum.data['conifers'] = conifers.value * el['CONIFERS'][0]
+    full_spectrum.data['algae'] = algae.value * el['ALGAE'][0]
+    full_spectrum.data['ocean'] = ocean_scale* el['OCEAN'][0]
 
+    
 
 # iterate on changes to parameters 
 #for w in [snow, conifers, algae, ocean]:
 #    w.on_change('value', update_data)
 
-#snow.on_change('value', update_data) 
-#conifers.on_change('value', update_data) 
-#algae.on_change('value', update_data) 
-#ocean.on_change('value', update_data) 
-
 # Set up layouts and add to document
-inputs = VBoxForm(children=[snow, conifers, algae, ocean])
-v = HBox(children=[inputs, atm_plot])
+inputs = Column(children=[snow, conifers, algae, ocean])
+v = Row(children=[inputs, atm_plot])
 curdoc().add_root(v)
-curdoc().add_periodic_callback(update_on_callback,100) 
-
+curdoc().add_periodic_callback(update_on_callback,2000)
 
 
 
